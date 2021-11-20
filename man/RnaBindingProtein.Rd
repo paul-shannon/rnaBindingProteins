@@ -30,7 +30,7 @@ assess RNA-binding protein binding sites, their structure and motif matches
 \item \href{#method-getBindingTable}{\code{RnaBindingProtein$getBindingTable()}}
 \item \href{#method-getAnnotationTypes}{\code{RnaBindingProtein$getAnnotationTypes()}}
 \item \href{#method-start.igv}{\code{RnaBindingProtein$start.igv()}}
-\item \href{#method-showUTRs}{\code{RnaBindingProtein$showUTRs()}}
+\item \href{#method-getUTRs}{\code{RnaBindingProtein$getUTRs()}}
 \item \href{#method-getBindingSites}{\code{RnaBindingProtein$getBindingSites()}}
 \item \href{#method-clone}{\code{RnaBindingProtein$clone()}}
 }
@@ -101,13 +101,13 @@ return igv reference
 
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-showUTRs"></a>}}
-\if{latex}{\out{\hypertarget{method-showUTRs}{}}}
-\subsection{Method \code{showUTRs()}}{
-start, and retain a reference to, an igvR for the current genome and targetGene
-return igv reference
+\if{html}{\out{<a id="method-getUTRs"></a>}}
+\if{latex}{\out{\hypertarget{method-getUTRs}{}}}
+\subsection{Method \code{getUTRs()}}{
+extract all 3' and 5' UTRs for thhe targetGene
+return data.frame
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{RnaBindingProtein$showUTRs()}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{RnaBindingProtein$getUTRs()}\if{html}{\out{</div>}}
 }
 
 }

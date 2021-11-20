@@ -98,9 +98,9 @@ RnaBindingProtein = R6Class("RnaBindingProtein",
 
         #------------------------------------------------------------
           #' @description
-          #' start, and retain a reference to, an igvR for the current genome and targetGene
-          #' return igv reference
-        showUTRs = function(){
+          #' extract all 3' and 5' UTRs for thhe targetGene
+          #' return data.frame
+        getUTRs = function(){
            genic.anno <- private$utrAnnotations[private$utrAnnotations$symbol %in% private$targetGene]
            tbl.anno <- as.data.frame(genic.anno)
            colnames(tbl.anno)[1] <- "chrom"
@@ -112,14 +112,16 @@ RnaBindingProtein = R6Class("RnaBindingProtein",
            dim(tbl.3utr)
            tbl.5utr <- tbl.anno[grep("5UTR", tbl.anno$type),]
            dim(tbl.5utr)
-           tbl.track <- tbl.5utr[, c("chrom", "start", "end", "id")]
-           track <- DataFrameAnnotationTrack("5'UTR", tbl.track, color="brown", displayMode="Collapse")
-           displayTrack(private$igv, track)
-           tbl.track <- tbl.3utr[, c("chrom", "start", "end", "id")]
-           track <- DataFrameAnnotationTrack("3'UTR", tbl.track, color="black")
-           displayTrack(private$igv, track)
+           #tbl.track <- tbl.5utr[, c("chrom", "start", "end", "id")]
+           #track <- DataFrameAnnotationTrack("5'UTR", tbl.track, color="brown", displayMode="Collapse")
+           #displayTrack(private$igv, track)
+           #tbl.track <- tbl.3utr[, c("chrom", "start", "end", "id")]
+           #track <- DataFrameAnnotationTrack("3'UTR", tbl.track, color="black")
+           #displayTrack(private$igv, track)
            private$tbl.3utr  <- tbl.3utr
            private$tbl.5utr  <- tbl.5utr
+           browser()
+           xyz <- 99
            },
 
         #------------------------------------------------------------

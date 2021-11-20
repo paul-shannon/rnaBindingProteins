@@ -56,6 +56,16 @@ test_start.igv <- function()
 
 } # test_start.igv
 #----------------------------------------------------------------------------------------------------
+test_getUTRs <- function()
+{
+    message(sprintf("--- test_getUTRs"))
+
+    eclip.file <- system.file(package="RnaBindingProtein", "extdata", "ENCFF565FNW.bigBed")
+    rbp <- RnaBindingProtein$new("DDX3X", "BACH1", eclip.file, "K562")
+    x <- rbp$getUTRs()
+
+} # test_getUTRs
+#----------------------------------------------------------------------------------------------------
 test_findBindingSites <- function(viz=FALSE)
 {
     message(sprintf("--- test_findBindingSites"))
