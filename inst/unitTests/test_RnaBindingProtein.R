@@ -6,6 +6,7 @@ runTests <- function()
     test_ctor()
     test_getAnnotationTypes()
     test_findBindingSites()
+    test_getUTRs()
 
 } # runTests
 #----------------------------------------------------------------------------------------------------
@@ -62,7 +63,10 @@ test_getUTRs <- function()
 
     eclip.file <- system.file(package="RnaBindingProtein", "extdata", "ENCFF565FNW.bigBed")
     rbp <- RnaBindingProtein$new("DDX3X", "BACH1", eclip.file, "K562")
-    x <- rbp$getUTRs()
+    tbl.utrs <- rbp$getUTRs()
+    checkEquals(dim(tbl.utrs), c(13, 10))
+    checkEquals(nrow(subset(tbl.utrs, type=="hg38_genes_3UTRs")), 2)
+    checkEquals(nrow(subset(tbl.utrs, type=="hg38_genes_5UTRs")), 11)
 
 } # test_getUTRs
 #----------------------------------------------------------------------------------------------------

@@ -23,9 +23,7 @@ RnaBindingProtein = R6Class("RnaBindingProtein",
                    tbl.rbpHits=NULL,
                    motifs.meme.file=NULL,
                    targetGene=NULL,
-                   utrAnnotations=NULL,
-                   tbl.3utr=NULL,
-                   tbl.5utr=NULL,
+                   tbl.utrs=NULL,
                    igv=NULL,
                    importBigBedFile=function(filename){
                        gr <- import(filename)
@@ -60,9 +58,9 @@ RnaBindingProtein = R6Class("RnaBindingProtein",
             private$tbl.rbpHits <- private$importBigBedFile(bigBedFile)
             private$cellType <- cellType
             private$motifs.meme.file <- motifs.meme.file
-            annotations.file <- system.file(package="RnaBindingProtein", "extdata", "anno.hg38.utrs.RData")
+            annotations.file <- system.file(package="RnaBindingProtein", "extdata", "UTRS-ucsc.RData")
             stopifnot(file.exists(annotations.file))
-            private$utrAnnotations <- get(load(annotations.file))
+            private$tbl.utrs <- get(load(annotations.file))
             },
 
         #------------------------------------------------------------
@@ -98,30 +96,10 @@ RnaBindingProtein = R6Class("RnaBindingProtein",
 
         #------------------------------------------------------------
           #' @description
-          #' extract all 3' and 5' UTRs for thhe targetGene
+          #' extract all 3' and 5' UTRs for the targetGene
           #' return data.frame
         getUTRs = function(){
-           genic.anno <- private$utrAnnotations[private$utrAnnotations$symbol %in% private$targetGene]
-           tbl.anno <- as.data.frame(genic.anno)
-           colnames(tbl.anno)[1] <- "chrom"
-           tbl.anno$chrom <- as.character(tbl.anno$chrom)
-           dups <- which(duplicated(tbl.anno[, c("start", "end", "type")]))
-           if(length(dups) > 0)
-               tbl.anno <- tbl.anno[-dups,]
-           tbl.3utr <- tbl.anno[grep("3UTR", tbl.anno$type),]
-           dim(tbl.3utr)
-           tbl.5utr <- tbl.anno[grep("5UTR", tbl.anno$type),]
-           dim(tbl.5utr)
-           #tbl.track <- tbl.5utr[, c("chrom", "start", "end", "id")]
-           #track <- DataFrameAnnotationTrack("5'UTR", tbl.track, color="brown", displayMode="Collapse")
-           #displayTrack(private$igv, track)
-           #tbl.track <- tbl.3utr[, c("chrom", "start", "end", "id")]
-           #track <- DataFrameAnnotationTrack("3'UTR", tbl.track, color="black")
-           #displayTrack(private$igv, track)
-           private$tbl.3utr  <- tbl.3utr
-           private$tbl.5utr  <- tbl.5utr
-           browser()
-           xyz <- 99
+           subset(private$tbl.utrs, symbol==private$targetGene)
            },
 
         #------------------------------------------------------------

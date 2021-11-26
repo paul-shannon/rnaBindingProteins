@@ -104,7 +104,7 @@ return igv reference
 \if{html}{\out{<a id="method-getUTRs"></a>}}
 \if{latex}{\out{\hypertarget{method-getUTRs}{}}}
 \subsection{Method \code{getUTRs()}}{
-extract all 3' and 5' UTRs for thhe targetGene
+extract all 3' and 5' UTRs for the targetGene
 return data.frame
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{RnaBindingProtein$getUTRs()}\if{html}{\out{</div>}}
