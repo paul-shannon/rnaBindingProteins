@@ -105,16 +105,39 @@ RnaBindingProtein = R6Class("RnaBindingProtein",
         #------------------------------------------------------------
           #' @description
           #' retrieve the rbp bindings sites within the specified region
-          #' @param annotation.types  character, one or more annotatr categoies
-          #' @param roi list with chrom, start, end fiels
+          #' @param roi list with chrom, start, end fields
+          #' @param annotation.types  character, one or more annotatr categoies, default is
+          #' c("hg38_genes_3UTRs", "hg38_genes_5UTRs")
           #' return data.frame
-        getBindingSites = function(annotation.types, roi){
+        getBindingSites = function(roi, annotation.types=c("hg38_genes_3UTRs", "hg38_genes_5UTRs")){
           result <- data.frame()
           if(is.list(roi) & all(c("chrom", "start", "end") %in% names(roi))){
              result <- subset(private$tbl.rbpHits, chrom==roi$chrom & start>=roi$start & end <= roi$end)
              }
            result
-           } # getBindingSites
+           }, # getBindingSites
+
+        #------------------------------------------------------------
+          #' @description
+          #' retrieve the rbp bindings which intersect with UTRs for the targetGene
+          #' @param intersectionType character, one of "any" or "within"
+          #' return data.frame
+        getBindingSites.inUTRs = function(intersectionType="any"){
+          stopifnot(intersectionType %in% c("any", "within"))
+          tbl.utrs <- self$getUTRs()
+          roi <- list(chrom=tbl.utrs$chrom[1], start=min(tbl.utrs$start), end=max(tbl.utrs$end))
+          tbl.bindingSites <- self$getBindingSites(roi)
+          tbl.out <- data.frame()
+          tbl.ov <- as.data.frame(findOverlaps(GRanges(tbl.bindingSites), GRanges(tbl.utrs)))
+          if(nrow(tbl.ov) > 0){
+             tbl.out <- cbind(tbl.bindingSites[tbl.ov[,1],], tbl.utrs[tbl.ov[,2],])
+             colnames(tbl.out)[c(12:15, 18, 20, 21)] <- c("chrom.utr", "start.utr", "end.utr", "width.utr", "enst", "geneSymbol", "type.utr")
+             coi <- c("chrom", "start", "end", "width", "name", "score", "start.utr", "end.utr", "width.utr", "geneSymbol", "enst", "type.utr")
+             tbl.out <- tbl.out[, coi]
+             colnames(tbl.out) <- NULL
+             }
+          tbl.out
+          } # getBindingSites
 
        ) # public
     ) # class

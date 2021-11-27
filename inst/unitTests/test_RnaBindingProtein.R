@@ -79,17 +79,41 @@ test_findBindingSites <- function(viz=FALSE)
     toi <- c("hg38_genes_3UTRs", "hg38_genes_5UTRs")
     checkEquals(sort(grep("UTR", rbp$getAnnotationTypes(), value=TRUE)), toi)
     roi <- list(chrom="chr21", start=29274856, end=29392243)
-    tbl.bach1.hits <- rbp$getBindingSites(c("hg38_genes_3UTRs", "hg38_genes_5UTRs"), roi)
+    tbl.bach1.hits <- rbp$getBindingSites(roi, c("hg38_genes_3UTRs", "hg38_genes_5UTRs"))
     checkEquals(dim(tbl.bach1.hits), c(7, 11))
-
-    if(interactive() & viz){
-       igv <- rbp$start.igv()
-       #setTrackHeight(igv, "Refseq Genes", 100)
-       rbp$showUTRs()
-       }
 
 
 } # test_findBindingSites
+#----------------------------------------------------------------------------------------------------
+test_getBindingSites.inUTRs <- function()
+{
+    message(sprintf("--- test_getBindingSites.inUTRs"))
+
+    eclip.file <- system.file(package="RnaBindingProtein", "extdata", "ENCFF565FNW.bigBed")
+    rbp <- RnaBindingProtein$new("DDX3X", "BACH1", eclip.file, "K562")
+
+    tbl.both <- rbp$getBindingSites.inUTRs()
+    checkEquals(dim(tbl.both), c(6, 12))
+
+    viz <- function(){
+       igv <- start.igv("BACH1")
+       zoomOut(igv)
+       # for testing, get the regions independently
+       tbl.utrs <- rbp$getUTRs()
+       shoulder <- 1000
+       roi <- list(chrom=tbl.utrs$chrom[1], start=min(tbl.utrs$start)-shoulder, end=max(tbl.utrs$end)+shoulder)
+       tbl.hits <- rbp$getBindingSites(roi)
+       track <- DataFrameAnnotationTrack("UTRs", tbl.utrs, color="red")
+       displayTrack(igv, track)
+       track <- DataFrameQuantitativeTrack("DDX3X", tbl.hits[, c("chrom", "start", "end", "score")],
+                                           autoscale=TRUE, color="brown")
+       displayTrack(igv, track)
+       track <- DataFrameAnnotationTrack("DDX3X in UTR", tbl.both, color="darkGreen")
+       displayTrack(igv, track)
+       }
+
+
+} # test_getBindingSites.inUTRs
 #----------------------------------------------------------------------------------------------------
 if(!interactive())
     runTests()
