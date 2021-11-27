@@ -30,9 +30,9 @@ assess RNA-binding protein binding sites, their structure and motif matches
 \item \href{#method-getBindingTable}{\code{RnaBindingProtein$getBindingTable()}}
 \item \href{#method-getAnnotationTypes}{\code{RnaBindingProtein$getAnnotationTypes()}}
 \item \href{#method-start.igv}{\code{RnaBindingProtein$start.igv()}}
-\item \href{#method-getUTRs}{\code{RnaBindingProtein$getUTRs()}}
+\item \href{#method-getGenicRegions}{\code{RnaBindingProtein$getGenicRegions()}}
 \item \href{#method-getBindingSites}{\code{RnaBindingProtein$getBindingSites()}}
-\item \href{#method-getBindingSites.inUTRs}{\code{RnaBindingProtein$getBindingSites.inUTRs()}}
+\item \href{#method-getBindingSites.inGenicRegions}{\code{RnaBindingProtein$getBindingSites.inGenicRegions()}}
 \item \href{#method-clone}{\code{RnaBindingProtein$clone()}}
 }
 }
@@ -102,13 +102,13 @@ return igv reference
 
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-getUTRs"></a>}}
-\if{latex}{\out{\hypertarget{method-getUTRs}{}}}
-\subsection{Method \code{getUTRs()}}{
-extract all 3' and 5' UTRs for the targetGene
+\if{html}{\out{<a id="method-getGenicRegions"></a>}}
+\if{latex}{\out{\hypertarget{method-getGenicRegions}{}}}
+\subsection{Method \code{getGenicRegions()}}{
+extract all 3' and 5' UTRs and CDS for the targetGene
 return data.frame
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{RnaBindingProtein$getUTRs()}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{RnaBindingProtein$getGenicRegions()}\if{html}{\out{</div>}}
 }
 
 }
@@ -118,31 +118,26 @@ return data.frame
 \subsection{Method \code{getBindingSites()}}{
 retrieve the rbp bindings sites within the specified region
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{RnaBindingProtein$getBindingSites(
-  roi,
-  annotation.types = c("hg38_genes_3UTRs", "hg38_genes_5UTRs")
-)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{RnaBindingProtein$getBindingSites(roi)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{roi}}{list with chrom, start, end fields}
-
-\item{\code{annotation.types}}{character, one or more annotatr categoies, default is
-c("hg38_genes_3UTRs", "hg38_genes_5UTRs")
+\item{\code{roi}}{list with chrom, start, end fields
 return data.frame}
 }
 \if{html}{\out{</div>}}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-getBindingSites.inUTRs"></a>}}
-\if{latex}{\out{\hypertarget{method-getBindingSites.inUTRs}{}}}
-\subsection{Method \code{getBindingSites.inUTRs()}}{
-retrieve the rbp bindings which intersect with UTRs for the targetGene
+\if{html}{\out{<a id="method-getBindingSites.inGenicRegions"></a>}}
+\if{latex}{\out{\hypertarget{method-getBindingSites.inGenicRegions}{}}}
+\subsection{Method \code{getBindingSites.inGenicRegions()}}{
+retrieve the rbp bindings which intersect with annotated genic regions of interest,
+currently UTRs and CDSfor the targetGene
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{RnaBindingProtein$getBindingSites.inUTRs(intersectionType = "any")}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{RnaBindingProtein$getBindingSites.inGenicRegions(intersectionType = "any")}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{

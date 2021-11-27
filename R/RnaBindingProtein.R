@@ -23,7 +23,8 @@ RnaBindingProtein = R6Class("RnaBindingProtein",
                    tbl.rbpHits=NULL,
                    motifs.meme.file=NULL,
                    targetGene=NULL,
-                   tbl.utrs=NULL,
+                      # originally only 3'UTR and 5'UTR, then added CDS when some DDX3X binding found there
+                   tbl.genicRegions=NULL,
                    igv=NULL,
                    importBigBedFile=function(filename){
                        gr <- import(filename)
@@ -58,9 +59,11 @@ RnaBindingProtein = R6Class("RnaBindingProtein",
             private$tbl.rbpHits <- private$importBigBedFile(bigBedFile)
             private$cellType <- cellType
             private$motifs.meme.file <- motifs.meme.file
-            annotations.file <- system.file(package="RnaBindingProtein", "extdata", "UTRS-ucsc.RData")
+            annotations.file <- system.file(package="RnaBindingProtein", "extdata",
+                                            #"UTRS-ucsc.RData",
+                                            "tbl.anno.hg38.utrs.CDS.RData")
             stopifnot(file.exists(annotations.file))
-            private$tbl.utrs <- get(load(annotations.file))
+            private$tbl.genicRegions <- get(load(annotations.file))
             },
 
         #------------------------------------------------------------
@@ -96,20 +99,18 @@ RnaBindingProtein = R6Class("RnaBindingProtein",
 
         #------------------------------------------------------------
           #' @description
-          #' extract all 3' and 5' UTRs for the targetGene
+          #' extract all 3' and 5' UTRs and CDS for the targetGene
           #' return data.frame
-        getUTRs = function(){
-           subset(private$tbl.utrs, symbol==private$targetGene)
+        getGenicRegions = function(){
+           subset(private$tbl.genicRegions, symbol==private$targetGene)
            },
 
         #------------------------------------------------------------
           #' @description
           #' retrieve the rbp bindings sites within the specified region
           #' @param roi list with chrom, start, end fields
-          #' @param annotation.types  character, one or more annotatr categoies, default is
-          #' c("hg38_genes_3UTRs", "hg38_genes_5UTRs")
           #' return data.frame
-        getBindingSites = function(roi, annotation.types=c("hg38_genes_3UTRs", "hg38_genes_5UTRs")){
+        getBindingSites = function(roi){
           result <- data.frame()
           if(is.list(roi) & all(c("chrom", "start", "end") %in% names(roi))){
              result <- subset(private$tbl.rbpHits, chrom==roi$chrom & start>=roi$start & end <= roi$end)
@@ -119,24 +120,43 @@ RnaBindingProtein = R6Class("RnaBindingProtein",
 
         #------------------------------------------------------------
           #' @description
-          #' retrieve the rbp bindings which intersect with UTRs for the targetGene
+          #' retrieve the rbp bindings which intersect with annotated genic regions of interest,
+          #' currently UTRs and CDSfor the targetGene
           #' @param intersectionType character, one of "any" or "within"
           #' return data.frame
-        getBindingSites.inUTRs = function(intersectionType="any"){
+        getBindingSites.inGenicRegions = function(intersectionType="any"){
           stopifnot(intersectionType %in% c("any", "within"))
-          tbl.utrs <- self$getUTRs()
-          roi <- list(chrom=tbl.utrs$chrom[1], start=min(tbl.utrs$start), end=max(tbl.utrs$end))
+          tbl.genicRegions <- self$getGenicRegions()
+          roi <- list(chrom=tbl.genicRegions$chrom[1], start=min(tbl.genicRegions$start),
+                      end=max(tbl.genicRegions$end))
           tbl.bindingSites <- self$getBindingSites(roi)
           tbl.out <- data.frame()
-          tbl.ov <- as.data.frame(findOverlaps(GRanges(tbl.bindingSites), GRanges(tbl.utrs)))
+          tbl.small <- data.frame()
+          tbl.ov <- as.data.frame(findOverlaps(GRanges(tbl.bindingSites), GRanges(tbl.genicRegions)))
+          colnames(tbl.ov) <- c("bs", "gr")
           if(nrow(tbl.ov) > 0){
-             tbl.out <- cbind(tbl.bindingSites[tbl.ov[,1],], tbl.utrs[tbl.ov[,2],])
-             colnames(tbl.out)[c(12:15, 18, 20, 21)] <- c("chrom.utr", "start.utr", "end.utr", "width.utr", "enst", "geneSymbol", "type.utr")
-             coi <- c("chrom", "start", "end", "width", "name", "score", "start.utr", "end.utr", "width.utr", "geneSymbol", "enst", "type.utr")
-             tbl.out <- tbl.out[, coi]
-             colnames(tbl.out) <- NULL
+             tbl.big <- cbind(tbl.bindingSites[tbl.ov[,1],], tbl.genicRegions[tbl.ov[,2],])
+             colnames(tbl.big)[c(12:15, 18, 20, 21)] <- c("chrom.gre", "start.gre", "end.gre", "width.gre", "enst", "geneSymbol", "type.gre")
+             coi <- c("chrom", "start", "end", "width", "name", "score", "start.gre", "end.gre", "width.gre", "geneSymbol", "enst", "type.gre")
+             tbl.big <- tbl.big[, coi]
+             rownames(tbl.big) <- NULL
+                # compress tbl.big to tbl.small, just one row for each binding site
+             hits <- unique(tbl.ov$bs)
+             tbls <- list()
+             i <- 1
+             for(hit in hits){
+                grs <- subset(tbl.ov, bs==hit)$gr
+                gr.types <- paste(unique(tbl.genicRegions[grs, "type"]), collapse=";")
+                tbl.bs <- tbl.bindingSites[hit,]
+                tbl.bs$regionType <- gr.types
+                tbls[[i]] <- tbl.bs
+                i <- i + 1
+                } # for hit
+             coi <- c("chrom", "start", "end", "width", "score", "regionType")
+             tbl.small <- do.call(rbind, tbls)[, coi]
+             rownames(tbl.small) <- NULL
              }
-          tbl.out
+          list(big=tbl.big, small=tbl.small)
           } # getBindingSites
 
        ) # public

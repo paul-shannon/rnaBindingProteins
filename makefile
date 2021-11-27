@@ -1,5 +1,5 @@
 default:
-	@echo targets:  roxy install test
+	@echo targets:  all [roxy install test]
 
 all: roxy install test
 

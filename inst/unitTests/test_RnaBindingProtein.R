@@ -63,10 +63,11 @@ test_getUTRs <- function()
 
     eclip.file <- system.file(package="RnaBindingProtein", "extdata", "ENCFF565FNW.bigBed")
     rbp <- RnaBindingProtein$new("DDX3X", "BACH1", eclip.file, "K562")
-    tbl.utrs <- rbp$getUTRs()
-    checkEquals(dim(tbl.utrs), c(13, 10))
-    checkEquals(nrow(subset(tbl.utrs, type=="hg38_genes_3UTRs")), 2)
-    checkEquals(nrow(subset(tbl.utrs, type=="hg38_genes_5UTRs")), 11)
+    tbl.gre <- rbp$getGenicRegions()
+    checkEquals(dim(tbl.gre), c(26, 10))
+    checkEquals(nrow(subset(tbl.gre, type=="hg38_genes_3UTRs")), 2)
+    checkEquals(nrow(subset(tbl.gre, type=="hg38_genes_5UTRs")), 12)
+    checkEquals(nrow(subset(tbl.gre, type=="hg38_genes_cds")), 12)
 
 } # test_getUTRs
 #----------------------------------------------------------------------------------------------------
@@ -76,41 +77,76 @@ test_findBindingSites <- function(viz=FALSE)
 
     eclip.file <- system.file(package="RnaBindingProtein", "extdata", "ENCFF565FNW.bigBed")
     rbp <- RnaBindingProtein$new("DDX3X", "BACH1", eclip.file, "K562")
-    toi <- c("hg38_genes_3UTRs", "hg38_genes_5UTRs")
-    checkEquals(sort(grep("UTR", rbp$getAnnotationTypes(), value=TRUE)), toi)
-    roi <- list(chrom="chr21", start=29274856, end=29392243)
-    tbl.bach1.hits <- rbp$getBindingSites(roi, c("hg38_genes_3UTRs", "hg38_genes_5UTRs"))
-    checkEquals(dim(tbl.bach1.hits), c(7, 11))
 
+    roi <- list(chrom="chr21", start=29274856, end=29392243)
+    tbl.bach1.hits <- rbp$getBindingSites(roi) #, c("hg38_genes_3UTRs", "hg38_genes_5UTRs"))
+    checkEquals(dim(tbl.bach1.hits), c(7, 11))
 
 } # test_findBindingSites
 #----------------------------------------------------------------------------------------------------
-test_getBindingSites.inUTRs <- function()
+# genic regions of interest: "hg38_genes_3UTRs", "hg38_genes_5UTRs"
+test_getBindingSites.inGenicRegions <- function()
 {
-    message(sprintf("--- test_getBindingSites.inUTRs"))
+    message(sprintf("--- test_getBindingSites.inGenicRegions"))
 
     eclip.file <- system.file(package="RnaBindingProtein", "extdata", "ENCFF565FNW.bigBed")
     rbp <- RnaBindingProtein$new("DDX3X", "BACH1", eclip.file, "K562")
 
-    tbl.both <- rbp$getBindingSites.inUTRs()
-    checkEquals(dim(tbl.both), c(6, 12))
+    x <- rbp$getBindingSites.inGenicRegions()
+    checkEquals(lapply(x, dim), list(big=c(11, 12), small=c(7, 6)))
+    tbl.small <- x$small   # unique DDX3X hits, sometimes in multiple regions
+    tbl.big   <- x$big     # unique DDX3X hit/genic region pairs
 
-    viz <- function(){
+    regionType.distribution <- as.list(table(tbl.small$regionType))
+    checkEquals(regionType.distribution,
+                list(hg38_genes_3UTRs=1,
+                     hg38_genes_5UTRs=3,
+                     hg38_genes_cds=2,
+                    "hg38_genes_cds;hg38_genes_5UTRs"=1))
+
+    viz <- function(){   # check these results visually
        igv <- start.igv("BACH1")
        zoomOut(igv)
-       # for testing, get the regions independently
-       tbl.utrs <- rbp$getUTRs()
+         # for testing, get the genic regions associated with targetGene, independently, build roi
+       tbl.gre <- rbp$getGenicRegions()
        shoulder <- 1000
-       roi <- list(chrom=tbl.utrs$chrom[1], start=min(tbl.utrs$start)-shoulder, end=max(tbl.utrs$end)+shoulder)
+       roi <- list(chrom=tbl.gre$chrom[1], start=min(tbl.gre$start)-shoulder, end=max(tbl.gre$end)+shoulder)
+            #-------------------------
+            # the DDX3X hits first
+            #-------------------------
        tbl.hits <- rbp$getBindingSites(roi)
-       track <- DataFrameAnnotationTrack("UTRs", tbl.utrs, color="red")
-       displayTrack(igv, track)
        track <- DataFrameQuantitativeTrack("DDX3X", tbl.hits[, c("chrom", "start", "end", "score")],
                                            autoscale=TRUE, color="brown")
        displayTrack(igv, track)
-       track <- DataFrameAnnotationTrack("DDX3X in UTR", tbl.both, color="darkGreen")
+
+            #-------------------------
+            # the 5'UTR regions
+            #-------------------------
+       track <- DataFrameAnnotationTrack("5'UTRs", subset(tbl.gre, type=="hg38_genes_5UTRs"), color="red")
        displayTrack(igv, track)
-       }
+
+            #-------------------------
+            # the 3'UTR regions
+            #-------------------------
+       track <- DataFrameAnnotationTrack("3'UTRs", subset(tbl.gre, type=="hg38_genes_3UTRs"), color="blue")
+       displayTrack(igv, track)
+
+            #-------------------------
+            # CDS regions
+            #-------------------------
+       tbl.track <- subset(tbl.gre, type=="hg38_genes_cds")
+       track <- DataFrameAnnotationTrack("CDS", tbl.track, color="darkGreen")
+       displayTrack(igv, track)
+
+            #--------------------------------------------------
+            # DDX3X in genic regions, simplified in tbl.small
+            #--------------------------------------------------
+       region.types <- unique(sort(tbl.small$regionType))
+       for(type in region.types){
+         track <- DataFrameAnnotationTrack(type, subset(tbl.small, regionType==type))
+         displayTrack(igv, track)
+         }
+       } # viz
 
 
 } # test_getBindingSites.inUTRs
