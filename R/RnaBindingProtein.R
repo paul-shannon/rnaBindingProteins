@@ -60,10 +60,13 @@ RnaBindingProtein = R6Class("RnaBindingProtein",
             private$cellType <- cellType
             private$motifs.meme.file <- motifs.meme.file
             annotations.file <- system.file(package="RnaBindingProtein", "extdata",
-                                            #"UTRS-ucsc.RData",
                                             "tbl.anno.hg38.utrs.CDS.RData")
             stopifnot(file.exists(annotations.file))
             private$tbl.genicRegions <- get(load(annotations.file))
+            if(!targetGene %in% private$tbl.genicRegions$symbol){
+               msg <- sprintf("--- RnaBindingProtein ctor, unrecognized gene symbol '%s'", targetGene)
+               stop(msg)
+               }
             },
 
         #------------------------------------------------------------
@@ -107,6 +110,14 @@ RnaBindingProtein = R6Class("RnaBindingProtein",
 
         #------------------------------------------------------------
           #' @description
+          #' access to the full whole genome annotations table
+          #' return data.frame
+        getAllGenicAnnotations = function(){
+           invisible(private$tbl.genicRegions)
+           },
+
+        #------------------------------------------------------------
+          #' @description
           #' retrieve the rbp bindings sites within the specified region
           #' @param roi list with chrom, start, end fields
           #' return data.frame
@@ -130,7 +141,7 @@ RnaBindingProtein = R6Class("RnaBindingProtein",
           roi <- list(chrom=tbl.genicRegions$chrom[1], start=min(tbl.genicRegions$start),
                       end=max(tbl.genicRegions$end))
           tbl.bindingSites <- self$getBindingSites(roi)
-          tbl.out <- data.frame()
+          tbl.big <- data.frame()
           tbl.small <- data.frame()
           tbl.ov <- as.data.frame(findOverlaps(GRanges(tbl.bindingSites), GRanges(tbl.genicRegions)))
           colnames(tbl.ov) <- c("bs", "gr")
@@ -154,6 +165,8 @@ RnaBindingProtein = R6Class("RnaBindingProtein",
                 } # for hit
              coi <- c("chrom", "start", "end", "width", "score", "regionType")
              tbl.small <- do.call(rbind, tbls)[, coi]
+             tbl.small$targetGene <- private$targetGene
+             tbl.small$rbp <- private$rbp
              rownames(tbl.small) <- NULL
              }
           list(big=tbl.big, small=tbl.small)

@@ -6,7 +6,8 @@ runTests <- function()
     test_ctor()
     test_getAnnotationTypes()
     test_findBindingSites()
-    test_getUTRs()
+    test_getGenicRegions()
+    test_getAllGenicAnnotations()
 
 } # runTests
 #----------------------------------------------------------------------------------------------------
@@ -57,9 +58,9 @@ test_start.igv <- function()
 
 } # test_start.igv
 #----------------------------------------------------------------------------------------------------
-test_getUTRs <- function()
+test_getGenicRegions <- function()
 {
-    message(sprintf("--- test_getUTRs"))
+    message(sprintf("--- test_getGenicRegions"))
 
     eclip.file <- system.file(package="RnaBindingProtein", "extdata", "ENCFF565FNW.bigBed")
     rbp <- RnaBindingProtein$new("DDX3X", "BACH1", eclip.file, "K562")
@@ -69,7 +70,21 @@ test_getUTRs <- function()
     checkEquals(nrow(subset(tbl.gre, type=="hg38_genes_5UTRs")), 12)
     checkEquals(nrow(subset(tbl.gre, type=="hg38_genes_cds")), 12)
 
-} # test_getUTRs
+} # test_getGenicRegions
+#----------------------------------------------------------------------------------------------------
+test_getAllGenicAnnotations <- function()
+{
+    message(sprintf("--- test_getAllGenicAnnotations"))
+
+    eclip.file <- system.file(package="RnaBindingProtein", "extdata", "ENCFF565FNW.bigBed")
+    rbp <- RnaBindingProtein$new("DDX3X", "BACH1", eclip.file, "K562")
+    tbl.anno <- rbp$getAllGenicAnnotations()
+    checkTrue(nrow(tbl.anno) > 500000)
+    checkEquals(ncol(tbl.anno), 10)
+    genes <- sort(unique(tbl.anno$symbol))
+    checkTrue(length(genes) > 19000)
+
+} # test_getAllGenicAnnotations
 #----------------------------------------------------------------------------------------------------
 test_findBindingSites <- function(viz=FALSE)
 {
@@ -148,8 +163,16 @@ test_getBindingSites.inGenicRegions <- function()
          }
        } # viz
 
-
 } # test_getBindingSites.inUTRs
+#----------------------------------------------------------------------------------------------------
+test_getBindingSites.inUTRs.assorted.other.genes <- function()
+{
+    nonStandardNames <- c("BCL11A_XL_L")
+    eclip.file <- system.file(package="RnaBindingProtein", "extdata", "ENCFF565FNW.bigBed")
+    rbp <- RnaBindingProtein$new("DDX3X", nonStandardNames[1], eclip.file, "K562")
+    x <- rbp$getBindingSites.inGenicRegions()
+
+} # test_getBindingSites.inUTRs.assorted.other.genes
 #----------------------------------------------------------------------------------------------------
 if(!interactive())
     runTests()

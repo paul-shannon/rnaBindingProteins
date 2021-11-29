@@ -31,6 +31,7 @@ assess RNA-binding protein binding sites, their structure and motif matches
 \item \href{#method-getAnnotationTypes}{\code{RnaBindingProtein$getAnnotationTypes()}}
 \item \href{#method-start.igv}{\code{RnaBindingProtein$start.igv()}}
 \item \href{#method-getGenicRegions}{\code{RnaBindingProtein$getGenicRegions()}}
+\item \href{#method-getAllGenicAnnotations}{\code{RnaBindingProtein$getAllGenicAnnotations()}}
 \item \href{#method-getBindingSites}{\code{RnaBindingProtein$getBindingSites()}}
 \item \href{#method-getBindingSites.inGenicRegions}{\code{RnaBindingProtein$getBindingSites.inGenicRegions()}}
 \item \href{#method-clone}{\code{RnaBindingProtein$clone()}}
@@ -109,6 +110,17 @@ extract all 3' and 5' UTRs and CDS for the targetGene
 return data.frame
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{RnaBindingProtein$getGenicRegions()}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-getAllGenicAnnotations"></a>}}
+\if{latex}{\out{\hypertarget{method-getAllGenicAnnotations}{}}}
+\subsection{Method \code{getAllGenicAnnotations()}}{
+access to the full whole genome annotations table
+return data.frame
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{RnaBindingProtein$getAllGenicAnnotations()}\if{html}{\out{</div>}}
 }
 
 }
