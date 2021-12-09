@@ -34,19 +34,19 @@ go <- function()
 
   run.search("BACH1")
   run.search("BCL11A")
+
   length(clear.drop.genes) # 90
   x.drop <- lapply(clear.drop.genes, run.search)
   tbl.drop <- do.call(rbind,x.drop)
   dim(tbl.drop)  # 386 8
   length(unique(tbl.drop$targetGene))   # 77/90
 
-  length(no.drop.genes)   # 8
+  length(no.drop.genes)   # 27
   x.noDrop <- lapply(no.drop.genes, run.search)
   tbl.noDrop <- do.call(rbind, x.noDrop)
-  dim(tbl.noDrop)  # 10 8
+  dim(tbl.noDrop)  # 79 8
+  length(unique(tbl.noDrop$targetGene))    # 19/27
 
-  x.noDrop <- lapply(no.drop.genes, run.search)
-  length(unique(tbl.noDrop$targetGene))   # 4/8
   nrow(tbl.noDrop)/length(unique(tbl.noDrop$targetGene)) # 2.5 binding sites per gene
   nrow(tbl.drop)/length(unique(tbl.drop$targetGene))     # 5.0 binding sites per gene
 
@@ -118,8 +118,18 @@ go.drop.discord.vs.noDiscord <- function()
        #  will we see fewer binding sites here?
        #----------------------------------------------------------
 
-  goi.noDiscord <- subset(tbl, clearProteinDrop & !rnaProteinDiscord)$geneSymbol
-  length(goi.noDiscord)  # 32
+  goi.drop.noDiscord <- subset(tbl, clearProteinDrop & !rnaProteinDiscord)$geneSymbol
+  goi.drop.discord   <- subset(tbl, clearProteinDrop & rnaProteinDiscord)$geneSymbol
+  goi.noDrop.noDiscord    <- subset(tbl, !clearProteinDrop & !rnaProteinDiscord)$geneSymbol
+  goi.noDrop.discord    <- subset(tbl, !clearProteinDrop & rnaProteinDiscord)$geneSymbol
+
+  length(goi.noDiscord)            # 32
+  length(goi.discord)              # 42
+  length(goi.noDrop.noDiscord)     #  6
+  length(unique(tbl$geneSymbol))   # 80
+
+  dim(subset(tbl, !clearProteinDrop))
+
 
   tbls.goi.noDiscord <- lapply(goi.noDiscord, run.search)
   tbl.noDiscord <- do.call(rbind, tbls.goi.noDiscord)
@@ -176,6 +186,31 @@ go.drop.discord.vs.noDiscord <- function()
   length(unique(tbl.discord.5utr$targetGene))  #  36/42  86%
   length(unique(tbl.discord.3utr$targetGene))  #  13/42  31%
   length(unique(tbl.discord.cds$targetGene))   #  23/42  55%
+
+  tbl.noDiscord.counts <- as.data.frame(table(tbl.noDiscord$targetGene))
+  colnames(tbl.noDiscord.counts) <- c("gene", "DDX3X.bindingSites")
+  no.sites <- setdiff(goi.noDiscord, tbl.noDiscord$targetGene)
+  tbl.noDiscord.counts <- rbind(tbl.noDiscord.counts, data.frame(gene=no.sites, DDX3X.bindingSites=0))
+  new.order <- order(tbl.noDiscord.counts$DDX3X.bindingSites, decreasing=FALSE)
+  tbl.noDiscord.counts <- tbl.noDiscord.counts[new.order,]
+  rownames(tbl.noDiscord.counts) <- NULL
+
+  tbl.discord.counts <- as.data.frame(table(tbl.discord$targetGene))
+  colnames(tbl.discord.counts) <- c("gene", "DDX3X.bindingSites")
+  no.sites <- setdiff(goi.discord, tbl.discord$targetGene)
+  tbl.discord.counts <- rbind(tbl.discord.counts, data.frame(gene=no.sites, DDX3X.bindingSites=0))
+  new.order <- order(tbl.discord.counts$DDX3X.bindingSites, decreasing=FALSE)
+  tbl.discord.counts <- tbl.discord.counts[new.order,]
+  rownames(tbl.discord.counts) <- NULL
+
+  boxplot(tbl.discord.counts$DDX3X.bindingSites, tbl.noDiscord.counts$DDX3X.bindingSites,
+          main="DDX3X binding sites per gene", names=c("discordant rna/srm", "no discordance"))
+
+  no.drop.genes <- sort(setdiff(tbl.discordances$geneSymbol,
+                                c(as.character(tbl.noDiscord.counts$gene),
+                                  as.character(tbl.discord.counts$gene))))
+  length(no.drop.genes)
+
 
 } # go.drop.discord.vs.noDiscord
 #----------------------------------------------------------------------------------------------------
@@ -236,6 +271,23 @@ go.random.1000 <- function()
   length(unique(tbl.random.cds$targetGene))   # 50/90
 
 } # go.random.1000
+#----------------------------------------------------------------------------------------------------
+# latest 80 gene spreadsheet from jeff:
+#   42 dropping proteins with rna/srm discord
+#  32 dropping proteins without discord
+#   6 proteins which do not drop:
+#     ERG   FLI1  GATA2 MNDA  SOX6  SPI1     (GATA2 drops, but that starts at day 8.5)
+#
+#  all the DDX3X binding sites for these 8, broken out by 3’, 5’ and CDS, scores attached, for these 6 genes
+go.no.drop <- function()
+{
+   goi <- c("ERG", "FLI1", "GATA2", "MNDA", "SOX6", "SPI1", "STAT1", "STAT2", "STAT3")
+   tbls.no.drop.6  <- lapply(goi, run.search)
+   tbl.noDrop.6 <- do.call(rbind, tbls.no.drop.6)
+   dim(tbl.noDrop.6)
+
+
+} # go.no.drop
 #----------------------------------------------------------------------------------------------------
 
 
