@@ -5,7 +5,6 @@
 #' @import annotatr
 #' @import rtracklayer
 #' @import TxDb.Hsapiens.UCSC.hg38.knownGene
-#' @import igvR
 #'
 #' @field rbp the gene symbol name of the protein
 #'

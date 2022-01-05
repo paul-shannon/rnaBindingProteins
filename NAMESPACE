@@ -3,5 +3,4 @@
 export(RnaBindingProtein)
 import(TxDb.Hsapiens.UCSC.hg38.knownGene)
 import(annotatr)
-import(igvR)
 import(rtracklayer)
