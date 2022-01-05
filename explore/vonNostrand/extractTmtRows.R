@@ -33,6 +33,13 @@ length(tmt.rows)
 tbl.tmt.rbp <- tbl.tmt[tmt.rows,]
 dim(tbl.tmt.rbp)   # 327  36
 
+s <- 'Protein FDR Confidence: Combined	Accession	Description	Exp. q-value: Combined	Sum PEP Score	Coverage [%]	# Peptides	# PSMs	# Unique Peptides	# AAs	MW [kDa]	calc. pI	Score Sequest HT: Sequest HT	# Peptides (by Search Engine): Sequest HT	Biological Process	Cellular Component	Molecular Function	Pfam IDs	Entrez Gene ID	Ensembl Gene ID	Chromosome	WikiPathways	Gene Symbol	KEGG Pathways	Reactome Pathways	# Protein Pathway Groups	# Razor Peptides		"126, Day 2"	"127N, Day 7.5"	"128N, Day 8"	"129C, Day 10"	"130N, Day 12"	"131, Day 14"	# Protein Groups	Modifications'
+nchar(s)
+coi <- strsplit(s, "\t")[[1]]
+colnames(tbl.tmt.rbp) <- coi
+colnames(tbl.tmt.rbp)[20] <- "ensg"
+
+
 ensg.dups <- tbl.tmt.rbp[which(duplicated(tbl.tmt.rbp[, 20])), 20]
 tbl.dups <- subset(tbl.tmt.rbp, ensg %in% ensg.dups)[, c("Accession", "ensg")]
 new.order <- order(tbl.dups$ensg)

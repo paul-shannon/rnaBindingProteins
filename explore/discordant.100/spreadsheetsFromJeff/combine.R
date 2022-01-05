@@ -63,7 +63,7 @@ with(tbl.both, table(clearDrop, rnaProteinDiscord))
 
 
 save(tbl.both, file="erytrhoGenesProteinsDropAndDiscordance.RData")
-# ~/github/rnaBindingProteins/explore/discordant.100/spreadsheetsFromJeff/
+tbl <- get(load("~/github/rnaBindingProteins/explore/discordant.100/spreadsheetsFromJeff/erytrhoGenesProteinsDropAndDiscordance.RData")
 # tbl.both <- get(load(
 
 dim(tbl.discordants)          # 42 5
