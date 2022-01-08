@@ -34,6 +34,7 @@ assess RNA-binding protein binding sites, their structure and motif matches
 \item \href{#method-getAllGenicAnnotations}{\code{RnaBindingProtein$getAllGenicAnnotations()}}
 \item \href{#method-getBindingSites}{\code{RnaBindingProtein$getBindingSites()}}
 \item \href{#method-getBindingSites.inGenicRegions}{\code{RnaBindingProtein$getBindingSites.inGenicRegions()}}
+\item \href{#method-writeFastaFile}{\code{RnaBindingProtein$writeFastaFile()}}
 \item \href{#method-clone}{\code{RnaBindingProtein$clone()}}
 }
 }
@@ -157,6 +158,26 @@ currently UTRs and CDSfor the targetGene
 \describe{
 \item{\code{intersectionType}}{character, one of "any" or "within"
 return data.frame}
+}
+\if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-writeFastaFile"></a>}}
+\if{latex}{\out{\hypertarget{method-writeFastaFile}{}}}
+\subsection{Method \code{writeFastaFile()}}{
+retrieve and write to file the DNA sequence for every genomic region in tbl
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{RnaBindingProtein$writeFastaFile(tbl, fasta.filename)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{tbl}}{data.frame produced by this class}
+
+\item{\code{fasta.filename}}{character, typically with an ".fa" file extension
+return integer count of sequences}
 }
 \if{html}{\out{</div>}}
 }

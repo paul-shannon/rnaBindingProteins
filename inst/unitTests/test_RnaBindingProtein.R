@@ -8,6 +8,7 @@ runTests <- function()
     test_findBindingSites()
     test_getGenicRegions()
     test_getAllGenicAnnotations()
+    test_writeFastaFile()
 
 } # runTests
 #----------------------------------------------------------------------------------------------------
@@ -173,6 +174,23 @@ test_getBindingSites.inUTRs.assorted.other.genes <- function()
     x <- rbp$getBindingSites.inGenicRegions()
 
 } # test_getBindingSites.inUTRs.assorted.other.genes
+#----------------------------------------------------------------------------------------------------
+test_writeFastaFile <- function()
+{
+    message(sprintf("--- test_writeFastaFile"))
+
+   eclip.file <- system.file(package="RnaBindingProtein", "extdata", "ENCFF565FNW.bigBed")
+   rbp <- RnaBindingProtein$new("DDX3X", "BACH1", eclip.file, "K562")
+   x <- rbp$getBindingSites.inGenicRegions()
+   tbl <- x$big
+   tbl$cell.line <- "K562"
+   tbl$rbp <- "DDX3X"
+   checkTrue(nrow(tbl) > 10)
+   sequence.count <- rbp$writeFastaFile(tbl, "tmp.fa")
+   checkEquals(nrow(tbl), sequence.count)
+   checkTrue(file.exists("tmp.fa"))
+
+} # test_writeFastaFile
 #----------------------------------------------------------------------------------------------------
 if(!interactive())
     runTests()

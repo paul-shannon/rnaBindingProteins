@@ -5,6 +5,7 @@
 #' @import annotatr
 #' @import rtracklayer
 #' @import TxDb.Hsapiens.UCSC.hg38.knownGene
+#' @import BSgenome.Hsapiens.UCSC.hg38
 #'
 #' @field rbp the gene symbol name of the protein
 #'
@@ -169,8 +170,22 @@ RnaBindingProtein = R6Class("RnaBindingProtein",
              rownames(tbl.small) <- NULL
              }
           list(big=tbl.big, small=tbl.small)
-          } # getBindingSites
-
+          }, # getBindingSites
+        #------------------------------------------------------------
+          #' @description
+          #' retrieve and write to file the DNA sequence for every genomic region in tbl
+          #' @param tbl data.frame produced by this class
+          #' @param fasta.filename character, typically with an ".fa" file extension
+          #' return integer count of sequences
+        writeFastaFile = function(tbl, fasta.filename){
+           stopifnot(all(c("chrom", "start", "end", "rbp", "geneSymbol", "cell.line") %in% colnames(tbl)))
+           dna.string.set <- with(tbl, getSeq(BSgenome.Hsapiens.UCSC.hg38, chrom, start, end))
+           names <- with(tbl, sprintf("%s-%s-%s-%s:%d-%d",
+                                      rbp, geneSymbol, cell.line, chrom, start, end))
+           names(dna.string.set) <- names
+           writeXStringSet(dna.string.set, fasta.filename)
+           length(dna.string.set)
+           }
        ) # public
     ) # class
 #--------------------------------------------------------------------------------
