@@ -34,7 +34,6 @@ assess RNA-binding protein binding sites, their structure and motif matches
 \item \href{#method-getAllGenicAnnotations}{\code{RnaBindingProtein$getAllGenicAnnotations()}}
 \item \href{#method-getBindingSites}{\code{RnaBindingProtein$getBindingSites()}}
 \item \href{#method-getBindingSites.inGenicRegions}{\code{RnaBindingProtein$getBindingSites.inGenicRegions()}}
-\item \href{#method-writeFastaFile}{\code{RnaBindingProtein$writeFastaFile()}}
 \item \href{#method-clone}{\code{RnaBindingProtein$clone()}}
 }
 }
@@ -74,11 +73,13 @@ calculated separately, describing motifs for the rbp}
 \if{html}{\out{<a id="method-getBindingTable"></a>}}
 \if{latex}{\out{\hypertarget{method-getBindingTable}{}}}
 \subsection{Method \code{getBindingTable()}}{
-returns the slightly processed and filtered data.frame version of the ENCODE bigbed
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{RnaBindingProtein$getBindingTable()}\if{html}{\out{</div>}}
 }
 
+\subsection{Returns}{
+the slightly processed and filtered data.frame version of the ENCODE bigbed
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-getAnnotationTypes"></a>}}
@@ -86,44 +87,52 @@ returns the slightly processed and filtered data.frame version of the ENCODE big
 \subsection{Method \code{getAnnotationTypes()}}{
 the bioc annotatr class offers a large set of genic annotations, ultimately
 obtained from UCSC via TxDb.Hsapiens.UCSC.hg38.knownGene
-return genic annotation types for hg38
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{RnaBindingProtein$getAnnotationTypes()}\if{html}{\out{</div>}}
 }
 
+\subsection{Returns}{
+genic annotation types for hg38
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-start.igv"></a>}}
 \if{latex}{\out{\hypertarget{method-start.igv}{}}}
 \subsection{Method \code{start.igv()}}{
 start, and retain a reference to, an igvR for the current genome and targetGene
-return igv reference
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{RnaBindingProtein$start.igv()}\if{html}{\out{</div>}}
 }
 
+\subsection{Returns}{
+igv reference
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-getGenicRegions"></a>}}
 \if{latex}{\out{\hypertarget{method-getGenicRegions}{}}}
 \subsection{Method \code{getGenicRegions()}}{
 extract all 3' and 5' UTRs and CDS for the targetGene
-return data.frame
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{RnaBindingProtein$getGenicRegions()}\if{html}{\out{</div>}}
 }
 
+\subsection{Returns}{
+data.frame
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-getAllGenicAnnotations"></a>}}
 \if{latex}{\out{\hypertarget{method-getAllGenicAnnotations}{}}}
 \subsection{Method \code{getAllGenicAnnotations()}}{
 access to the full whole genome annotations table
-return data.frame
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{RnaBindingProtein$getAllGenicAnnotations()}\if{html}{\out{</div>}}
 }
 
+\subsection{Returns}{
+data.frame
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-getBindingSites"></a>}}
@@ -137,10 +146,12 @@ retrieve the rbp bindings sites within the specified region
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{roi}}{list with chrom, start, end fields
-return data.frame}
+\item{\code{roi}}{list with chrom, start, end fields}
 }
 \if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+data.frame
 }
 }
 \if{html}{\out{<hr>}}
@@ -150,36 +161,18 @@ return data.frame}
 retrieve the rbp bindings which intersect with annotated genic regions of interest,
 currently UTRs and CDSfor the targetGene
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{RnaBindingProtein$getBindingSites.inGenicRegions(intersectionType = "any")}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{RnaBindingProtein$getBindingSites.inGenicRegions(intersectionType = "within")}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{intersectionType}}{character, one of "any" or "within"
-return data.frame}
+\item{\code{intersectionType}}{character, one of "any" or "within"}
 }
 \if{html}{\out{</div>}}
 }
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-writeFastaFile"></a>}}
-\if{latex}{\out{\hypertarget{method-writeFastaFile}{}}}
-\subsection{Method \code{writeFastaFile()}}{
-retrieve and write to file the DNA sequence for every genomic region in tbl
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{RnaBindingProtein$writeFastaFile(tbl, fasta.filename)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{tbl}}{data.frame produced by this class}
-
-\item{\code{fasta.filename}}{character, typically with an ".fa" file extension
-return integer count of sequences}
-}
-\if{html}{\out{</div>}}
+\subsection{Returns}{
+data.frame
 }
 }
 \if{html}{\out{<hr>}}

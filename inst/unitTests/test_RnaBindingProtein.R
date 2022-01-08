@@ -8,7 +8,8 @@ runTests <- function()
     test_findBindingSites()
     test_getGenicRegions()
     test_getAllGenicAnnotations()
-    test_writeFastaFile()
+    test_getBindingSites.inGenicRegions()
+    # test_writeFastaFile()
 
 } # runTests
 #----------------------------------------------------------------------------------------------------
@@ -109,16 +110,15 @@ test_getBindingSites.inGenicRegions <- function()
     rbp <- RnaBindingProtein$new("DDX3X", "BACH1", eclip.file, "K562")
 
     x <- rbp$getBindingSites.inGenicRegions()
-    checkEquals(lapply(x, dim), list(big=c(11, 12), small=c(7, 6)))
+    checkEquals(lapply(x, dim), list(big=c(6, 12), small=c(5, 8)))
     tbl.small <- x$small   # unique DDX3X hits, sometimes in multiple regions
     tbl.big   <- x$big     # unique DDX3X hit/genic region pairs
 
     regionType.distribution <- as.list(table(tbl.small$regionType))
     checkEquals(regionType.distribution,
                 list(hg38_genes_3UTRs=1,
-                     hg38_genes_5UTRs=3,
-                     hg38_genes_cds=2,
-                    "hg38_genes_cds;hg38_genes_5UTRs"=1))
+                     hg38_genes_5UTRs=2,
+                     hg38_genes_cds=2))
 
     viz <- function(){   # check these results visually
        igv <- start.igv("BACH1")

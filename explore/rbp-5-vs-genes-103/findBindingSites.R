@@ -111,6 +111,29 @@ runAll <- function()
 
 } # runAll
 #----------------------------------------------------------------------------------------------------
+runMeme <- function()
+{
+   tbl <- get(load("tbl.rbp.all.RData"))
+   tbl <- subset(tbl, width.gre >= 6)
+   dim(tbl)
+
+   eclip.file <- system.file(package="RnaBindingProtein", "extdata", "ENCFF565FNW.bigBed")
+   rbp <- RnaBindingProtein$new("DDX3X", "BACH1", eclip.file, "K562")
+
+   fasta.filename <- "rbpTargetGenes.10163bindingSites.fa"
+   sequence.count <- rbp$writeFastaFile(tbl, fasta.filename)
+   checkEquals(nrow(tbl), sequence.count)
+   checkTrue(file.exists(fasta.filename))
+
+
+   cmd <- sprintf("~/meme/bin/meme %s -dna -oc . -nostatus -time 14400 -mod zoops -nmotifs 5 -minw 6 -maxw 50 -objfun  classic -revcomp -markov_order 0", fasta.filename)
+
+   system(cmd)
+   system("open meme.html")
+
+
+} # runMeme
+#----------------------------------------------------------------------------------------------------
 
 
 

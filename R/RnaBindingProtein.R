@@ -71,7 +71,7 @@ RnaBindingProtein = R6Class("RnaBindingProtein",
 
         #------------------------------------------------------------
           #' @description
-          #' returns the slightly processed and filtered data.frame version of the ENCODE bigbed
+          #' @return the slightly processed and filtered data.frame version of the ENCODE bigbed
         getBindingTable = function(){
            invisible(private$tbl.rbpHits)
            },
@@ -80,7 +80,7 @@ RnaBindingProtein = R6Class("RnaBindingProtein",
           #' @description
           #' the bioc annotatr class offers a large set of genic annotations, ultimately
           #' obtained from UCSC via TxDb.Hsapiens.UCSC.hg38.knownGene
-          #' return genic annotation types for hg38
+          #' @return genic annotation types for hg38
         getAnnotationTypes = function(){
            grep("hg38", builtin_annotations(), v=TRUE)
            },
@@ -88,7 +88,7 @@ RnaBindingProtein = R6Class("RnaBindingProtein",
         #------------------------------------------------------------
           #' @description
           #' start, and retain a reference to, an igvR for the current genome and targetGene
-          #' return igv reference
+          #' @return igv reference
         start.igv = function(){
            igv <- igvR()
            setGenome(igv, private$genome)
@@ -103,7 +103,7 @@ RnaBindingProtein = R6Class("RnaBindingProtein",
         #------------------------------------------------------------
           #' @description
           #' extract all 3' and 5' UTRs and CDS for the targetGene
-          #' return data.frame
+          #' @return data.frame
         getGenicRegions = function(){
            subset(private$tbl.genicRegions, symbol==private$targetGene)
            },
@@ -111,7 +111,7 @@ RnaBindingProtein = R6Class("RnaBindingProtein",
         #------------------------------------------------------------
           #' @description
           #' access to the full whole genome annotations table
-          #' return data.frame
+          #' @return data.frame
         getAllGenicAnnotations = function(){
            invisible(private$tbl.genicRegions)
            },
@@ -120,7 +120,7 @@ RnaBindingProtein = R6Class("RnaBindingProtein",
           #' @description
           #' retrieve the rbp bindings sites within the specified region
           #' @param roi list with chrom, start, end fields
-          #' return data.frame
+          #' @return data.frame
         getBindingSites = function(roi){
           result <- data.frame()
           if(is.list(roi) & all(c("chrom", "start", "end") %in% names(roi))){
@@ -134,8 +134,8 @@ RnaBindingProtein = R6Class("RnaBindingProtein",
           #' retrieve the rbp bindings which intersect with annotated genic regions of interest,
           #' currently UTRs and CDSfor the targetGene
           #' @param intersectionType character, one of "any" or "within"
-          #' return data.frame
-        getBindingSites.inGenicRegions = function(intersectionType="any"){
+          #' @return data.frame
+        getBindingSites.inGenicRegions = function(intersectionType="within"){
           stopifnot(intersectionType %in% c("any", "within"))
           tbl.genicRegions <- self$getGenicRegions()
           roi <- list(chrom=tbl.genicRegions$chrom[1], start=min(tbl.genicRegions$start),
@@ -143,9 +143,10 @@ RnaBindingProtein = R6Class("RnaBindingProtein",
           tbl.bindingSites <- self$getBindingSites(roi)
           tbl.big <- data.frame()
           tbl.small <- data.frame()
-          tbl.ov <- as.data.frame(findOverlaps(GRanges(tbl.bindingSites), GRanges(tbl.genicRegions)))
-          colnames(tbl.ov) <- c("bs", "gr")
+          tbl.ov <- as.data.frame(findOverlaps(GRanges(tbl.bindingSites), GRanges(tbl.genicRegions),
+                                               type=intersectionType))
           if(nrow(tbl.ov) > 0){
+             colnames(tbl.ov) <- c("bs", "gr")
              tbl.big <- cbind(tbl.bindingSites[tbl.ov[,1],], tbl.genicRegions[tbl.ov[,2],])
              colnames(tbl.big)[c(12:15, 18, 20, 21)] <- c("chrom.gre", "start.gre", "end.gre", "width.gre", "enst", "geneSymbol", "type.gre")
              coi <- c("chrom", "start", "end", "width", "name", "score", "start.gre", "end.gre", "width.gre", "geneSymbol", "enst", "type.gre")
@@ -163,29 +164,35 @@ RnaBindingProtein = R6Class("RnaBindingProtein",
                 tbls[[i]] <- tbl.bs
                 i <- i + 1
                 } # for hit
+
              coi <- c("chrom", "start", "end", "width", "score", "regionType")
-             tbl.small <- do.call(rbind, tbls)[, coi]
+             tbl.small <- do.call(rbind, tbls) [, coi]
              tbl.small$targetGene <- private$targetGene
              tbl.small$rbp <- private$rbp
+             #colnames(tbl.small) <- c("chrom", "start", "end", "width", "score", "regionType")
              rownames(tbl.small) <- NULL
              }
           list(big=tbl.big, small=tbl.small)
-          }, # getBindingSites
+          } # getBindingSites
         #------------------------------------------------------------
-          #' @description
-          #' retrieve and write to file the DNA sequence for every genomic region in tbl
-          #' @param tbl data.frame produced by this class
-          #' @param fasta.filename character, typically with an ".fa" file extension
-          #' return integer count of sequences
-        writeFastaFile = function(tbl, fasta.filename){
-           stopifnot(all(c("chrom", "start", "end", "rbp", "geneSymbol", "cell.line") %in% colnames(tbl)))
-           dna.string.set <- with(tbl, getSeq(BSgenome.Hsapiens.UCSC.hg38, chrom, start, end))
-           names <- with(tbl, sprintf("%s-%s-%s-%s:%d-%d",
-                                      rbp, geneSymbol, cell.line, chrom, start, end))
-           names(dna.string.set) <- names
-           writeXStringSet(dna.string.set, fasta.filename)
-           length(dna.string.set)
-           }
        ) # public
     ) # class
+#--------------------------------------------------------------------------------
+#' @description
+#' retrieve and write to file the DNA sequence for every genomic region in tbl
+#' @param tbl data.frame produced by this class
+#' @param fasta.filename character, typically with an ".fa" file extension
+#' @return integer count of sequences
+#' @export
+writeFastaFile = function(tbl, fasta.filename)
+{
+   stopifnot(all(c("chrom", "start.gre", "end.gre", "rbp", "geneSymbol", "cell.line") %in% colnames(tbl)))
+   dna.string.set <- with(tbl, getSeq(BSgenome.Hsapiens.UCSC.hg38, chrom, start, end))
+   names <- with(tbl, sprintf("%s-%s-%s-%s:%d-%d",
+                              rbp, geneSymbol, cell.line, chrom, start.gre, end.gre))
+   names(dna.string.set) <- names
+   writeXStringSet(dna.string.set, fasta.filename)
+   length(dna.string.set)
+
+} # writeFastaFile
 #--------------------------------------------------------------------------------
