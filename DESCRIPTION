@@ -1,8 +1,8 @@
 Package: RnaBindingProtein
 Type: Package
 Title: RnaBindingProtein
-Version: 1.0.9
-Date: 2022-01-08
+Version: 1.0.11
+Date: 2022-02-05
 Author: Paul Shannon
 Maintainer: Paul Shannon<pshannon@systemsbiology.org>
 Imports:
@@ -10,7 +10,7 @@ Imports:
    org.Hs.eg.db,
    RPostgreSQL,
    trena
-Description: discover motifs and binding sites of rbps from ENCODE eCLIP data (and etc.)
+Description: discover binding sites and motifs of RBPs from ENCODE eCLIP data (and etc.)
 Depends: R (>= 4.1.0), R6, GenomicRanges, BSgenome.Hsapiens.UCSC.hg38
 License: MIT
 Encoding: UTF-8

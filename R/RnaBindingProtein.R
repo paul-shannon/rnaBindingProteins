@@ -60,7 +60,8 @@ RnaBindingProtein = R6Class("RnaBindingProtein",
             private$cellType <- cellType
             private$motifs.meme.file <- motifs.meme.file
             annotations.file <- system.file(package="RnaBindingProtein", "extdata",
-                                            "tbl.anno.hg38.utrs.CDS.RData")
+                                            "tbl.anno-hg38-11-categories.RData")
+                                            #"tbl.anno.hg38.utrs.CDS.RData")
             stopifnot(file.exists(annotations.file))
             private$tbl.genicRegions <- get(load(annotations.file))
             if(!targetGene %in% private$tbl.genicRegions$symbol){
@@ -152,6 +153,8 @@ RnaBindingProtein = R6Class("RnaBindingProtein",
              coi <- c("chrom", "start", "end", "width", "name", "score", "start.gre", "end.gre", "width.gre", "geneSymbol", "enst", "type.gre")
              tbl.big <- tbl.big[, coi]
              rownames(tbl.big) <- NULL
+             tbl.big$rbp <- private$rbp
+             tbl.big$cellType <- private$cellType
                 # compress tbl.big to tbl.small, just one row for each binding site
              hits <- unique(tbl.ov$bs)
              tbls <- list()
@@ -169,7 +172,6 @@ RnaBindingProtein = R6Class("RnaBindingProtein",
              tbl.small <- do.call(rbind, tbls) [, coi]
              tbl.small$targetGene <- private$targetGene
              tbl.small$rbp <- private$rbp
-             #colnames(tbl.small) <- c("chrom", "start", "end", "width", "score", "regionType")
              rownames(tbl.small) <- NULL
              }
           list(big=tbl.big, small=tbl.small)
@@ -182,14 +184,21 @@ RnaBindingProtein = R6Class("RnaBindingProtein",
 #' retrieve and write to file the DNA sequence for every genomic region in tbl
 #' @param tbl data.frame produced by this class
 #' @param fasta.filename character, typically with an ".fa" file extension
+#' @param minimum.sequence.length integer, default 5
 #' @return integer count of sequences
 #' @export
-writeFastaFile = function(tbl, fasta.filename)
+writeFastaFile = function(tbl, fasta.filename, minimum.sequence.length=5)
 {
-   stopifnot(all(c("chrom", "start.gre", "end.gre", "rbp", "geneSymbol", "cell.line") %in% colnames(tbl)))
+   stopifnot(all(c("chrom", "start.gre", "end.gre", "rbp", "geneSymbol", "cellType") %in% colnames(tbl)))
+   tbl <- subset(tbl, width >= minimum.sequence.length)
+   stopifnot(nrow(tbl) > 0)
+
+   location.duplicates <- which(duplicated(tbl[, c("chrom", "start", "end")]))
+   if(length(location.duplicates) > 0)
+       tbl <- tbl[-location.duplicates,]
    dna.string.set <- with(tbl, getSeq(BSgenome.Hsapiens.UCSC.hg38, chrom, start, end))
    names <- with(tbl, sprintf("%s-%s-%s-%s:%d-%d",
-                              rbp, geneSymbol, cell.line, chrom, start.gre, end.gre))
+                              rbp, geneSymbol, cellType, chrom, start, end))
    names(dna.string.set) <- names
    writeXStringSet(dna.string.set, fasta.filename)
    length(dna.string.set)
