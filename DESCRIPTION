@@ -1,8 +1,8 @@
 Package: RnaBindingProtein
 Type: Package
 Title: RnaBindingProtein
-Version: 1.0.11
-Date: 2022-02-05
+Version: 1.0.13
+Date: 2022-02-07
 Author: Paul Shannon
 Maintainer: Paul Shannon<pshannon@systemsbiology.org>
 Imports:

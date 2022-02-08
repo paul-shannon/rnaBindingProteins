@@ -43,13 +43,7 @@ assess RNA-binding protein binding sites, their structure and motif matches
 \subsection{Method \code{new()}}{
 Creates a new instance of this [R6][R6::R6Class] class.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{RnaBindingProtein$new(
-  rbp,
-  targetGene,
-  bigBedFile,
-  cellType,
-  motifs.meme.file = NA
-)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{RnaBindingProtein$new(rbp, targetGene, cellType, motifs.meme.file = NA)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -57,9 +51,7 @@ Creates a new instance of this [R6][R6::R6Class] class.
 \describe{
 \item{\code{targetGene}}{character, gene symbol presumably having associated rbp binding sites}
 
-\item{\code{bigBedFile}}{character, full path to the ENCODE file with binding sites}
-
-\item{\code{cellType}}{character, typically "K562"}
+\item{\code{cellType}}{character, currently "K562" or "HepG2"}
 
 \item{\code{motifs.meme.file}}{character, full path to an optional motifs file,
 calculated separately, describing motifs for the rbp}
@@ -112,7 +104,8 @@ igv reference
 \if{html}{\out{<a id="method-getGenicRegions"></a>}}
 \if{latex}{\out{\hypertarget{method-getGenicRegions}{}}}
 \subsection{Method \code{getGenicRegions()}}{
-extract all 3' and 5' UTRs and CDS for the targetGene
+extract all genic regions, mulitiple types, no longer just
+3' and 5' UTRs and CDS) for the targetGene
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{RnaBindingProtein$getGenicRegions()}\if{html}{\out{</div>}}
 }

@@ -17,9 +17,9 @@ test_ctor <- function()
 {
     message(sprintf("--- test_ctor"))
 
-    eclip.file <- system.file(package="RnaBindingProtein", "extdata", "ENCFF565FNW.bigBed")
-    checkTrue(file.exists(eclip.file))
-    rbp.tool <- RnaBindingProtein$new("DDX3X", "BACH1", eclip.file, "K562")
+    rbp.tool <- RnaBindingProtein$new("DDX3X", "BACH1", "K562")
+    checkTrue(all(c("R6", "RnaBindingProtein") %in% class(rbp.tool)))
+    rbp.tool <- RnaBindingProtein$new("DDX3X", targetGene=NA, "K562")
     checkTrue(all(c("R6", "RnaBindingProtein") %in% class(rbp.tool)))
 
     tbl.rbp <- rbp.tool$getBindingTable()
@@ -28,6 +28,18 @@ test_ctor <- function()
     checkEquals(score.stats[1], 1.0, tol=1)
     checkEquals(score.stats[5], 400.0, tol=1)
 
+    tbl.encodeMappings <- rbp.tool$getEncodeMappingsTable()
+
+    tbl.rbp <- RnaBindingProtein$new("UPF1", NA, "HepG2")
+
+    set.seed(17)
+    i <- sample(seq_len(nrow(tbl.encodeMappings)), size=1)
+    rbp.tool <- RnaBindingProtein$new(rbp=tbl.encodeMappings$target[i],
+                                      targetGene=NA,
+                                      cellType=tbl.encodeMappings$cellType[i])
+    tbl.bindings <- rbp.tool$getBindingTable()
+    checkTrue(nrow(tbl.bindings) > 1000)
+    checkEquals(ncol(tbl.bindings), 11)
 
 } # test_ctor
 #----------------------------------------------------------------------------------------------------
@@ -36,7 +48,7 @@ test_getAnnotationTypes <- function()
     message(sprintf("--- test_getAnnotationTypes"))
 
     eclip.file <- system.file(package="RnaBindingProtein", "extdata", "ENCFF565FNW.bigBed")
-    rbp.tool <- RnaBindingProtein$new("DDX3X", "BACH1", eclip.file, "K562")
+    rbp.tool <- RnaBindingProtein$new("DDX3X", "BACH1", "K562")
 
     expected <- c("hg38_basicgenes", "hg38_cpg_inter", "hg38_cpg_islands", "hg38_cpg_shelves",
                   "hg38_cpg_shores", "hg38_cpgs", "hg38_enhancers_fantom", "hg38_genes_1to5kb",
@@ -64,8 +76,8 @@ test_getGenicRegions <- function()
 {
     message(sprintf("--- test_getGenicRegions"))
 
-    eclip.file <- system.file(package="RnaBindingProtein", "extdata", "ENCFF565FNW.bigBed")
-    rbp.tool <- RnaBindingProtein$new("DDX3X", "BACH1", eclip.file, "K562")
+    #eclip.file <- system.file(package="RnaBindingProtein", "extdata", "ENCFF565FNW.bigBed")
+    rbp.tool <- RnaBindingProtein$new("DDX3X", "BACH1", "K562")
     tbl.gre <- rbp.tool$getGenicRegions()
     checkEquals(dim(tbl.gre), c(219, 10))
     checkEquals(nrow(subset(tbl.gre, type=="hg38_genes_3UTRs")), 3)
@@ -78,8 +90,8 @@ test_getAllGenicAnnotations <- function()
 {
     message(sprintf("--- test_getAllGenicAnnotations"))
 
-    eclip.file <- system.file(package="RnaBindingProtein", "extdata", "ENCFF565FNW.bigBed")
-    rbp.tool <- RnaBindingProtein$new("DDX3X", "BACH1", eclip.file, "K562")
+    #eclip.file <- system.file(package="RnaBindingProtein", "extdata", "ENCFF565FNW.bigBed")
+    rbp.tool <- RnaBindingProtein$new("DDX3X", NA, "K562")
     tbl.anno <- rbp.tool$getAllGenicAnnotations()
     checkTrue(nrow(tbl.anno) > 500000)
     checkEquals(ncol(tbl.anno), 10)
@@ -92,8 +104,8 @@ test_findBindingSites <- function(viz=FALSE)
 {
     message(sprintf("--- test_findBindingSites"))
 
-    eclip.file <- system.file(package="RnaBindingProtein", "extdata", "ENCFF565FNW.bigBed")
-    rbp.tool <- RnaBindingProtein$new("DDX3X", "BACH1", eclip.file, "K562")
+    #eclip.file <- system.file(package="RnaBindingProtein", "extdata", "ENCFF565FNW.bigBed")
+    rbp.tool <- RnaBindingProtein$new("DDX3X", "BACH1", "K562")
 
     roi <- list(chrom="chr21", start=29274856, end=29392243)
     tbl.bach1.hits <- rbp.tool$getBindingSites(roi) #, c("hg38_genes_3UTRs", "hg38_genes_5UTRs"))
@@ -105,11 +117,10 @@ test_getBindingSites.inGenicRegions <- function()
 {
     message(sprintf("--- test_getBindingSites.inGenicRegions"))
 
-    eclip.file <- system.file(package="RnaBindingProtein", "extdata", "ENCFF565FNW.bigBed")
-    rbp.tool <- RnaBindingProtein$new("DDX3X", "BACH1", eclip.file, "K562")
+    rbp.tool <- RnaBindingProtein$new("DDX3X", "BACH1", "K562")
 
     x <- rbp.tool$getBindingSites.inGenicRegions()
-    checkEquals(lapply(x, dim), list(big=c(82, 14), small=c(7, 8)))
+    checkEquals(lapply(x, dim), list(big=c(82, 14), small=c(7, 9)))
     tbl.small <- x$small   # unique DDX3X hits, sometimes in multiple regions
     tbl.big   <- x$big     # unique DDX3X hit/genic region pairs
 
@@ -170,8 +181,8 @@ test_getBindingSites.inGenicRegions <- function()
 test_getBindingSites.inUTRs.assorted.other.genes <- function()
 {
     nonStandardNames <- c("BCL11A_XL_L")
-    eclip.file <- system.file(package="RnaBindingProtein", "extdata", "ENCFF565FNW.bigBed")
-    rbp.tool <- RnaBindingProtein$new("DDX3X", nonStandardNames[1], eclip.file, "K562")
+    # eclip.file <- system.file(package="RnaBindingProtein", "extdata", "ENCFF565FNW.bigBed")
+    rbp.tool <- RnaBindingProtein$new("DDX3X", nonStandardNames[1],  "K562")
     x <- rbp.tool$getBindingSites.inGenicRegions()
 
 } # test_getBindingSites.inUTRs.assorted.other.genes
@@ -180,11 +191,11 @@ test_writeFastaFile <- function()
 {
    message(sprintf("--- test_writeFastaFile"))
 
-   eclip.file <- system.file(package="RnaBindingProtein", "extdata", "ENCFF565FNW.bigBed")
-   rbp.tool <- RnaBindingProtein$new("DDX3X", "BACH1", eclip.file, "K562")
+   #eclip.file <- system.file(package="RnaBindingProtein", "extdata", "ENCFF565FNW.bigBed")
+   rbp.tool <- RnaBindingProtein$new("DDX3X", "BACH1", "K562")
    x <- rbp.tool$getBindingSites.inGenicRegions(intersectionType="within")
    lapply(x, dim)
-   tbl <- x$big
+   tbl <- x$small
    checkTrue(nrow(tbl) > 5)
    checkEquals(4, writeFastaFile(tbl, "tmp.fa", minimum.sequence.length=40))
    checkEquals(7, writeFastaFile(tbl, "tmp.fa", minimum.sequence.length=5))

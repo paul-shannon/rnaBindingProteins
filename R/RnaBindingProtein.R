@@ -17,6 +17,7 @@ RnaBindingProtein = R6Class("RnaBindingProtein",
 
     #--------------------------------------------------------------------------------
     private = list(rbp=NULL,
+                   tbl.encodeMappings=NULL,
                    genome=NULL,
                    cellType=NULL,
                    bigBedFile=NULL,       # likely from encode, eCLIP results
@@ -25,6 +26,7 @@ RnaBindingProtein = R6Class("RnaBindingProtein",
                    targetGene=NULL,
                       # originally only 3'UTR and 5'UTR, then added CDS when some DDX3X binding found there
                    tbl.genicRegions=NULL,
+                   annotations.fileName=NULL,
                    igv=NULL,
                    importBigBedFile=function(filename){
                        gr <- import(filename)
@@ -46,29 +48,41 @@ RnaBindingProtein = R6Class("RnaBindingProtein",
          #'
          #' @param rpb character, gene symbol identifier for the rbp
          #' @param targetGene character, gene symbol presumably having associated rbp binding sites
-         #' @param bigBedFile character, full path to the ENCODE file with binding sites
-         #' @param cellType character, typically "K562"
+         #' @param cellType character, currently "K562" or "HepG2"
          #' @param motifs.meme.file character, full path to an optional motifs file,
          #'        calculated separately, describing motifs for the rbp
-        initialize = function(rbp, targetGene, bigBedFile, cellType, motifs.meme.file=NA){
-            private$rbp <- rbp
-            private$targetGene <- targetGene
-            private$genome <- "hg38"            # fixed for now
-            stopifnot(file.exists(bigBedFile))
-            private$bigBedFile <- bigBedFile
-            private$tbl.rbpHits <- private$importBigBedFile(bigBedFile)
+        initialize = function(rbp, targetGene, cellType, motifs.meme.file=NA){
             private$cellType <- cellType
+            private$targetGene <- targetGene
+            private$rbp <- rbp
+            private$tbl.encodeMappings <-
+                get(load(system.file(package="RnaBindingProtein", "extdata", "vanNostrand-2020",
+                                     "encode.ids.targetGenes.cellTypes.RData")))
+            tbl.sub <- subset(private$tbl.encodeMappings,
+                              cellType==private$cellType & target==private$rbp)
+            if(nrow(tbl.sub) == 0){
+                message(sprintf("no ENCODE bigBed file for rbp %s in cellType %s", rbp, cellType))
+                stop();
+                }
+            private$bigBedFile <- system.file(package="RnaBindingProtein", "extdata", "vanNostrand-2020",
+                                              sprintf("%s.bigBed", tbl.sub$id))
+            stopifnot(file.exists(private$bigBedFile))
+            private$genome <- "hg38"            # fixed for now
+            private$tbl.rbpHits <- private$importBigBedFile(private$bigBedFile)
             private$motifs.meme.file <- motifs.meme.file
-            annotations.file <- system.file(package="RnaBindingProtein", "extdata",
-                                            "tbl.anno-hg38-11-categories.RData")
-                                            #"tbl.anno.hg38.utrs.CDS.RData")
-            stopifnot(file.exists(annotations.file))
-            private$tbl.genicRegions <- get(load(annotations.file))
-            if(!targetGene %in% private$tbl.genicRegions$symbol){
-               msg <- sprintf("--- RnaBindingProtein ctor, unrecognized gene symbol '%s'", targetGene)
-               stop(msg)
-               }
+            private$annotations.fileName <- system.file(package="RnaBindingProtein", "extdata",
+                                                        "tbl.anno-hg38-11-categories.RData")
+                                        #"tbl.anno.hg38.utrs.CDS.RData")
+            stopifnot(file.exists(private$annotations.fileName))
+            }, # ctor
+
+        #------------------------------------------------------------
+          #' @description
+          #' @return the table of RBPs/cellTypes for which we have bigBed files from ENCODE
+        getEncodeMappingsTable = function(){
+            invisible(private$tbl.encodeMappings)
             },
+
 
         #------------------------------------------------------------
           #' @description
@@ -103,9 +117,17 @@ RnaBindingProtein = R6Class("RnaBindingProtein",
 
         #------------------------------------------------------------
           #' @description
-          #' extract all 3' and 5' UTRs and CDS for the targetGene
+          #' extract all genic regions, mulitiple types, no longer just
+          #' 3' and 5' UTRs and CDS) for the targetGene
           #' @return data.frame
         getGenicRegions = function(){
+           if(is.null(private$tbl.genicRegions))
+               private$tbl.genicRegions <- get(load(private$annotations.fileName))
+
+           if(!private$targetGene %in% private$tbl.genicRegions$symbol){
+              message(sprintf("targetGene %s not annotated wrt region", private$targetGene))
+              return(data.frame())
+              }
            subset(private$tbl.genicRegions, symbol==private$targetGene)
            },
 
@@ -114,6 +136,9 @@ RnaBindingProtein = R6Class("RnaBindingProtein",
           #' access to the full whole genome annotations table
           #' @return data.frame
         getAllGenicAnnotations = function(){
+           if(is.null(private$tbl.genicRegions))
+                       private$tbl.genicRegions <- get(load(private$annotations.fileName))
+
            invisible(private$tbl.genicRegions)
            },
 
@@ -171,6 +196,7 @@ RnaBindingProtein = R6Class("RnaBindingProtein",
              coi <- c("chrom", "start", "end", "width", "score", "regionType")
              tbl.small <- do.call(rbind, tbls) [, coi]
              tbl.small$targetGene <- private$targetGene
+             tbl.small$cellType <- private$cellType
              tbl.small$rbp <- private$rbp
              rownames(tbl.small) <- NULL
              }
@@ -187,9 +213,8 @@ RnaBindingProtein = R6Class("RnaBindingProtein",
 #' @param minimum.sequence.length integer, default 5
 #' @return integer count of sequences
 #' @export
-writeFastaFile = function(tbl, fasta.filename, minimum.sequence.length=5)
+writeFastaFile = function(tbl, fasta.filename, minimum.sequence.length=5, rbp)
 {
-   stopifnot(all(c("chrom", "start.gre", "end.gre", "rbp", "geneSymbol", "cellType") %in% colnames(tbl)))
    tbl <- subset(tbl, width >= minimum.sequence.length)
    stopifnot(nrow(tbl) > 0)
 
@@ -198,7 +223,7 @@ writeFastaFile = function(tbl, fasta.filename, minimum.sequence.length=5)
        tbl <- tbl[-location.duplicates,]
    dna.string.set <- with(tbl, getSeq(BSgenome.Hsapiens.UCSC.hg38, chrom, start, end))
    names <- with(tbl, sprintf("%s-%s-%s-%s:%d-%d",
-                              rbp, geneSymbol, cellType, chrom, start, end))
+                             rbp, targetGene, cellType, chrom, start, end))
    names(dna.string.set) <- names
    writeXStringSet(dna.string.set, fasta.filename)
    length(dna.string.set)
