@@ -27,13 +27,16 @@ assess RNA-binding protein binding sites, their structure and motif matches
 \subsection{Public methods}{
 \itemize{
 \item \href{#method-new}{\code{RnaBindingProtein$new()}}
+\item \href{#method-getEncodeCatalog}{\code{RnaBindingProtein$getEncodeCatalog()}}
 \item \href{#method-getBindingTable}{\code{RnaBindingProtein$getBindingTable()}}
 \item \href{#method-getAnnotationTypes}{\code{RnaBindingProtein$getAnnotationTypes()}}
 \item \href{#method-start.igv}{\code{RnaBindingProtein$start.igv()}}
 \item \href{#method-getGenicRegions}{\code{RnaBindingProtein$getGenicRegions()}}
 \item \href{#method-getAllGenicAnnotations}{\code{RnaBindingProtein$getAllGenicAnnotations()}}
 \item \href{#method-getBindingSites}{\code{RnaBindingProtein$getBindingSites()}}
+\item \href{#method-getGeneRegion}{\code{RnaBindingProtein$getGeneRegion()}}
 \item \href{#method-getBindingSites.inGenicRegions}{\code{RnaBindingProtein$getBindingSites.inGenicRegions()}}
+\item \href{#method-runMeme}{\code{RnaBindingProtein$runMeme()}}
 \item \href{#method-clone}{\code{RnaBindingProtein$clone()}}
 }
 }
@@ -59,6 +62,18 @@ calculated separately, describing motifs for the rbp}
 \item{\code{rpb}}{character, gene symbol identifier for the rbp}
 }
 \if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-getEncodeCatalog"></a>}}
+\if{latex}{\out{\hypertarget{method-getEncodeCatalog}{}}}
+\subsection{Method \code{getEncodeCatalog()}}{
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{RnaBindingProtein$getEncodeCatalog()}\if{html}{\out{</div>}}
+}
+
+\subsection{Returns}{
+the table of RBPs/cellTypes for which we have bigBed files from ENCODE
 }
 }
 \if{html}{\out{<hr>}}
@@ -148,6 +163,19 @@ data.frame
 }
 }
 \if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-getGeneRegion"></a>}}
+\if{latex}{\out{\hypertarget{method-getGeneRegion}{}}}
+\subsection{Method \code{getGeneRegion()}}{
+retrieve the chrom, start and end of the targetGene, if !na
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{RnaBindingProtein$getGeneRegion()}\if{html}{\out{</div>}}
+}
+
+\subsection{Returns}{
+list with chrom, start end, geneSymbol fields
+}
+}
+\if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-getBindingSites.inGenicRegions"></a>}}
 \if{latex}{\out{\hypertarget{method-getBindingSites.inGenicRegions}{}}}
 \subsection{Method \code{getBindingSites.inGenicRegions()}}{
@@ -166,6 +194,28 @@ currently UTRs and CDSfor the targetGene
 }
 \subsection{Returns}{
 data.frame
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-runMeme"></a>}}
+\if{latex}{\out{\hypertarget{method-runMeme}{}}}
+\subsection{Method \code{runMeme()}}{
+create fasta file from filtered rbp binding sites, run meme
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{RnaBindingProtein$runMeme(tag.name, bl.sitesFiltered)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{tagName}}{character something memorable and explanatory}
+
+\item{\code{top.quartiles.to.include}}{numeric, 1 or more}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+character string, the path to the meme html output
 }
 }
 \if{html}{\out{<hr>}}

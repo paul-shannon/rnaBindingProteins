@@ -22,6 +22,7 @@ RnaBindingProtein = R6Class("RnaBindingProtein",
                    cellType=NULL,
                    bigBedFile=NULL,       # likely from encode, eCLIP results
                    tbl.rbpHits=NULL,
+                   biomart=NULL,
                    motifs.meme.file=NULL,
                    targetGene=NULL,
                       # originally only 3'UTR and 5'UTR, then added CDS when some DDX3X binding found there
@@ -79,7 +80,7 @@ RnaBindingProtein = R6Class("RnaBindingProtein",
         #------------------------------------------------------------
           #' @description
           #' @return the table of RBPs/cellTypes for which we have bigBed files from ENCODE
-        getEncodeMappingsTable = function(){
+        getEncodeCatalog = function(){
             invisible(private$tbl.encodeMappings)
             },
 
@@ -157,6 +158,22 @@ RnaBindingProtein = R6Class("RnaBindingProtein",
 
         #------------------------------------------------------------
           #' @description
+          #' retrieve the chrom, start and end of the targetGene, if !na
+          #' @return list with chrom, start end, geneSymbol fields
+        getGeneRegion = function(){
+          if(is.na(private$targetGene)) return(list())
+          suppressMessages({
+             geneID <- select(org.Hs.eg.db, keys=private$targetGene,
+                              keytype="SYMBOL", columns=c("ENTREZID"))$ENTREZID
+             tbl <- select(TxDb.Hsapiens.UCSC.hg38.knownGene,
+                           keys=geneID, keytype="GENEID", columns=c("TXCHROM", "TXSTART", "TXEND"))
+             })
+          roi <- list(chrom=tbl$TXCHROM[1], start=min(tbl$TXSTART), end=max(tbl$TXEND))
+          roi
+          }, # getGeneRegion
+
+        #------------------------------------------------------------
+          #' @description
           #' retrieve the rbp bindings which intersect with annotated genic regions of interest,
           #' currently UTRs and CDSfor the targetGene
           #' @param intersectionType character, one of "any" or "within"
@@ -201,19 +218,45 @@ RnaBindingProtein = R6Class("RnaBindingProtein",
              rownames(tbl.small) <- NULL
              }
           list(big=tbl.big, small=tbl.small)
-          } # getBindingSites
+          }, # getBindingSites
+
+        #------------------------------------------------------------
+          #' @description
+          #' create fasta file from filtered rbp binding sites, run meme
+          #' @param tagName character something memorable and explanatory
+          #' @param top.quartiles.to.include numeric, 1 or more
+          #' @return character string, the path to the meme html output
+        runMeme = function(tag.name, bl.sitesFiltered) {
+           base.name <- sprintf("%s.rbp.%s.cellType.%s.sites.count.%d",
+                                tag.name, private$rbp, private$cellType, nrow(tbl.sites))
+
+           printf("--- base.name: %s", base.name)
+           fasta.filename <- sprintf("%s.fa", base.name)
+           writeFastaFile(tbl.sites, fasta.filename, minimum.sequence.length=6, private$rbp,
+                          private$targetGene, private$cellType)
+           args1 <- sprintf("-dna -oc %s", base.name)
+           args2 <- "-nostatus -time 14400 -mod zoops -nmotifs 10 -minw 6 -maxw 100 -objfun  classic -revcomp -markov_order 0"
+           cmd <- sprintf("~/meme/bin/meme %s %s %s", fasta.filename, args1, args2)
+           system(cmd)
+           return(sprintf("%s/meme.html", base.name))
+           } # runMeme
+
         #------------------------------------------------------------
        ) # public
     ) # class
 #--------------------------------------------------------------------------------
+#' @name writeFastaFile
 #' @description
 #' retrieve and write to file the DNA sequence for every genomic region in tbl
 #' @param tbl data.frame produced by this class
 #' @param fasta.filename character, typically with an ".fa" file extension
 #' @param minimum.sequence.length integer, default 5
+#' @param rbp character the name of the rna binding protein
+#' @param targetGene character - if any
+#' @param cellType character e.g. K562, HepG2
 #' @return integer count of sequences
 #' @export
-writeFastaFile = function(tbl, fasta.filename, minimum.sequence.length=5, rbp)
+writeFastaFile = function(tbl, fasta.filename, minimum.sequence.length=5, rbp, targetGene, cellType)
 {
    tbl <- subset(tbl, width >= minimum.sequence.length)
    stopifnot(nrow(tbl) > 0)

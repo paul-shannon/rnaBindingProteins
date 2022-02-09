@@ -4,12 +4,15 @@ library(RnaBindingProtein)
 runTests <- function()
 {
     test_ctor()
+    test_getEncodeCatalog()
     test_getAnnotationTypes()
-    test_findBindingSites()
+    test_getGeneRegions()
+    test_getBindingSites()
     test_getGenicRegions()
     test_getAllGenicAnnotations()
     test_getBindingSites.inGenicRegions()
     test_writeFastaFile()
+    test_runMeme()
 
 } # runTests
 #----------------------------------------------------------------------------------------------------
@@ -28,7 +31,7 @@ test_ctor <- function()
     checkEquals(score.stats[1], 1.0, tol=1)
     checkEquals(score.stats[5], 400.0, tol=1)
 
-    tbl.encodeMappings <- rbp.tool$getEncodeMappingsTable()
+    tbl.encodeMappings <- rbp.tool$getEncodeCatalog()
 
     tbl.rbp <- RnaBindingProtein$new("UPF1", NA, "HepG2")
 
@@ -43,11 +46,25 @@ test_ctor <- function()
 
 } # test_ctor
 #----------------------------------------------------------------------------------------------------
+test_getEncodeCatalog <- function()
+{
+    message(sprintf("--- test_getEncodeMappings"))
+
+    rbp.tool <- RnaBindingProtein$new("DDX3X", targetGene=NA, "K562")
+    tbl.cat <- rbp.tool$getEncodeCatalog()
+    checkEquals(dim(tbl.cat), c(225, 3))
+
+    colnames(tbl.cat)[3] <- "rbp"
+    tbl.cat <- tbl.cat[order(tbl.cat$rbp),]
+    rownames(tbl.cat) <- NULL
+    tbl.cat[, c("rbp", "cellType", "id")]
+
+} # test_getEncodeCatalog
+#----------------------------------------------------------------------------------------------------
 test_getAnnotationTypes <- function()
 {
     message(sprintf("--- test_getAnnotationTypes"))
 
-    eclip.file <- system.file(package="RnaBindingProtein", "extdata", "ENCFF565FNW.bigBed")
     rbp.tool <- RnaBindingProtein$new("DDX3X", "BACH1", "K562")
 
     expected <- c("hg38_basicgenes", "hg38_cpg_inter", "hg38_cpg_islands", "hg38_cpg_shelves",
@@ -72,11 +89,25 @@ test_start.igv <- function()
 
 } # test_start.igv
 #----------------------------------------------------------------------------------------------------
+test_getGeneRegion <- function()
+{
+    goi <- c("CHD1", "CREBBP", "CTCF", "E2F4", "EGR1", "ELF1", "GATAD2A", "GTF2F1",
+             "HDAC2", "HMGB3", "JUND", "KLF1", "KLF3", "LDB1", "NELFE", "NFE2",
+             "NR3C1", "NRF1", "POLR2A", "POU2F1", "RAD21", "RCOR1", "RFX5", "SMC3",
+             "TAL1", "TCF3", "WDR5", "ZBTB7A")
+
+    for(gene in goi){
+        rbp.tool <- RnaBindingProtein$new("DDX3X", gene, "K562")
+        roi <- rbp.tool$getGeneRegion()
+        checkEquals(names(roi), c("chrom", "start", "end"))
+        }
+
+} # testGetGeneRegion
+#----------------------------------------------------------------------------------------------------
 test_getGenicRegions <- function()
 {
     message(sprintf("--- test_getGenicRegions"))
 
-    #eclip.file <- system.file(package="RnaBindingProtein", "extdata", "ENCFF565FNW.bigBed")
     rbp.tool <- RnaBindingProtein$new("DDX3X", "BACH1", "K562")
     tbl.gre <- rbp.tool$getGenicRegions()
     checkEquals(dim(tbl.gre), c(219, 10))
@@ -100,18 +131,17 @@ test_getAllGenicAnnotations <- function()
 
 } # test_getAllGenicAnnotations
 #----------------------------------------------------------------------------------------------------
-test_findBindingSites <- function(viz=FALSE)
+test_getBindingSites <- function(viz=FALSE)
 {
-    message(sprintf("--- test_findBindingSites"))
+    message(sprintf("--- test_getBindingSites"))
 
-    #eclip.file <- system.file(package="RnaBindingProtein", "extdata", "ENCFF565FNW.bigBed")
-    rbp.tool <- RnaBindingProtein$new("DDX3X", "BACH1", "K562")
+    rbp.tool <- RnaBindingProtein$new("DDX3X", "KLF1", "K562")
+    roi <- rbp.tool$getGeneRegion()
+    tbl.hits <- rbp.tool$getBindingSites(roi)
+    checkEquals(dim(tbl.hits), c(2, 11))
 
-    roi <- list(chrom="chr21", start=29274856, end=29392243)
-    tbl.bach1.hits <- rbp.tool$getBindingSites(roi) #, c("hg38_genes_3UTRs", "hg38_genes_5UTRs"))
-    checkEquals(dim(tbl.bach1.hits), c(7, 11))
 
-} # test_findBindingSites
+} # test_getBindingSites
 #----------------------------------------------------------------------------------------------------
 test_getBindingSites.inGenicRegions <- function()
 {
@@ -205,6 +235,68 @@ test_writeFastaFile <- function()
    checkEquals(width(stringSet), c(35, 42, 34, 67, 143, 36, 41))
 
 } # test_writeFastaFile
+#----------------------------------------------------------------------------------------------------
+test_runMeme <- function()
+{
+   message(sprintf("--- test_runMeme"))
+
+   #file.of.previous.results <- system.file(package="RnaBindingProtein",
+   #                                        "extdata", "tbl.sites.28goi.RData")
+   #if(!file.exists(file.of.previous.results)){
+
+     # extract and combine binding sites in marjorie's rna-seq cluster 3
+   goi <- c("CHD1", "CREBBP", "CTCF", "E2F4", "EGR1", "ELF1", "GATAD2A", "GTF2F1",
+            "HDAC2", "HMGB3", "JUND", "KLF1", "KLF3", "LDB1", "NELFE", "NFE2",
+            "NR3C1", "NRF1", "POLR2A", "POU2F1", "RAD21", "RCOR1", "RFX5", "SMC3",
+            "TAL1", "TCF3", "WDR5", "ZBTB7A")
+
+   tbls.sites <- list()
+   for(targetGene in goi){
+     tryCatch({
+        printf("--- %d) %s", grep(targetGene, goi), targetGene)
+        rbp.tool <- RnaBindingProtein$new("DDX3X", targetGene, "K562")
+        x <- rbp.tool$getBindingSites.inGenicRegions(intersectionType="any")
+        printf(" %d sites in genic regions", nrow(x$small))
+        tbls.sites[[targetGene]] <- x$small   # duplicates are removed, genic types collapsed
+        roi <- rbp.tool$getGeneRegion()
+        tbl <- rbp.tool$getBindingSites(roi)
+        printf(" %d sites in whole gene", nrow(tbl))
+     }, error = function(e){
+         printf("failed with %s", targetGene)
+         print(e)
+         xyz <- 99
+         })
+      } # for targetGene
+   tbl.sites <- do.call(rbind, tbls.sites)
+   save(tbl.sites, file="tbl.sites.28goi.RData")
+   load("tbl.sites.28goi.RData")
+   load("tbl.sites.10goi.RData")
+   threshold <- fivenum(tbl.sites$score)[4]
+   tbl.sites.filtered <- subset(tbl.sites, score > threshold)
+   rbp.tool <- RnaBindingProtein$new("DDX3X", NA, "K562")
+   html.path <- rbp.tool$runMeme("goi28_test_runMeme", tbl.sites.filtered)
+   checkTrue(file.exists(html.path))
+   browseURL(html.path)
+
+} # test_runMeme
+#----------------------------------------------------------------------------------------------------
+tmp <- function()
+{
+  library(org.Hs.eg.db); db <- org.Hs.eg.db
+  library(TxDb.Hsapiens.UCSC.hg38.knownGene); txdb <- TxDb.Hsapiens.UCSC.hg38.knownGene
+  goi <- "BACH1"
+  goi <- "GRIK1"
+  goi <- "KLF1"
+  geneID <- select(org.Hs.eg.db, keys=goi, keytype="SYMBOL", columns=c("ENTREZID"))$ENTREZID
+  tbl <- select(txdb, keys=geneID, keytype="GENEID", columns=c("TXCHROM", "TXSTART", "TXEND"))
+  dim(tbl)
+
+  track <- DataFrameAnnotationTrack(goi, tbl[, 2:4], color="random")
+  displayTrack(igv, track)
+  showGenomicRegion(igv, goi)
+
+
+} # tmp
 #----------------------------------------------------------------------------------------------------
 if(!interactive())
     runTests()
